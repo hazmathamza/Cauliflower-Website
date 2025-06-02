@@ -1,0 +1,93 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 13% 18%;
+    --foreground: 220 9% 46%;
+    --card: 220 13% 18%;
+    --card-foreground: 220 9% 46%;
+    --popover: 220 13% 18%;
+    --popover-foreground: 220 9% 46%;
+    --primary: 235 86% 65%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 13% 23%;
+    --secondary-foreground: 220 9% 46%;
+    --muted: 220 13% 23%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 13% 23%;
+    --accent-foreground: 220 9% 46%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 23%;
+    --input: 220 13% 23%;
+    --ring: 235 86% 65%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Discord-like animations */
+.message-hover {
+  transition: all 0.1s ease;
+}
+
+.message-hover:hover {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.channel-hover {
+  transition: all 0.1s ease;
+}
+
+.channel-hover:hover {
+  background-color: hsl(var(--muted) / 0.5);
+  color: hsl(var(--foreground));
+}
+
+.server-icon {
+  transition: all 0.2s ease;
+}
+
+.server-icon:hover {
+  border-radius: 16px;
+  background-color: hsl(var(--primary));
+}
+
+/* Gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1));
+}
+
+.message-gradient {
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
+}
