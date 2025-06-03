@@ -500,23 +500,65 @@ function App() {
     }
     
     try {
+      console.log("Sending friend request from", currentUser.uid, "to", targetUserId);
+      
+      // Verify both users exist before sending request
+      const targetUser = users.find(u => u.uid === targetUserId);
+      if (!targetUser) {
+        toast({ variant: "destructive", title: "User Not Found", description: "Could not find the user you're trying to add." });
+        return;
+      }
+      
+      // Check if already friends
+      if (currentUser.friends && currentUser.friends.includes(targetUserId)) {
+        toast({ variant: "destructive", title: "Already Friends", description: `You are already friends with ${targetUser.username}.` });
+        return;
+      }
+      
+      // Check if friend request already sent
+      if (targetUser.friendRequests && targetUser.friendRequests.some(req => req.fromUserId === currentUser.uid)) {
+        toast({ variant: "destructive", title: "Request Already Sent", description: `You've already sent a friend request to ${targetUser.username}.` });
+        return;
+      }
+      
+      // Send the friend request
       await friendService.sendFriendRequest(currentUser.uid, targetUserId);
       
-      const targetUser = users.find(u => u.uid === targetUserId);
-      toast({ title: "Friend Request Sent!", description: `Friend request sent to ${targetUser?.username || 'user'}.` });
+      // Show success message
+      toast({ title: "Friend Request Sent!", description: `Friend request sent to ${targetUser.username}.` });
+      
+      // Refresh user data
+      const updatedUsers = await userService.getAllUsers();
+      setUsers(updatedUsers);
     } catch (error) {
+      console.error("Friend request error:", error);
+      
+      // Show detailed error message
       toast({ 
         variant: "destructive", 
         title: "Friend Request Failed", 
-        description: error.message 
+        description: error.message || "There was an error sending the friend request. Please try again."
       });
     }
   };
 
   const handleFriendRequest = async (requesterId, action) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      toast({ variant: "destructive", title: "Error", description: "You must be logged in to respond to friend requests." });
+      return;
+    }
 
     try {
+      console.log("Responding to friend request from", requesterId, "with action:", action);
+      
+      // Verify requester exists
+      const requesterUser = users.find(u => u.uid === requesterId);
+      if (!requesterUser) {
+        toast({ variant: "destructive", title: "User Not Found", description: "The user who sent this request could not be found." });
+        return;
+      }
+      
+      // Respond to the friend request
       const result = await friendService.respondToFriendRequest(currentUser.uid, requesterId, action);
       
       // Update the current user
@@ -528,12 +570,12 @@ function App() {
       setUsers(allUsers);
       
       if (action === 'accept') {
-        const requesterUser = users.find(u => u.uid === requesterId);
-        toast({ title: "Friend Request Accepted!", description: `You are now friends with ${requesterUser?.username || 'user'}.` });
+        toast({ title: "Friend Request Accepted!", description: `You are now friends with ${requesterUser.username}.` });
         
         // Initialize messages for the DM channel
         if (result.dmChannelId) {
           try {
+            console.log("Initializing DM channel:", result.dmChannelId);
             const dmMessages = await messageService.getChannelMessages(result.dmChannelId);
             setMessages(prev => ({
               ...prev,
@@ -548,16 +590,17 @@ function App() {
               ...prev,
               [result.dmChannelId]: []
             }));
-          }
         }
       } else {
         toast({ title: "Friend Request Declined." });
       }
     } catch (error) {
+      console.error("Friend request response error:", error);
+      
       toast({ 
         variant: "destructive", 
         title: "Friend Request Action Failed", 
-        description: error.message 
+        description: error.message || "There was an error responding to the friend request. Please try again."
       });
     }
   };

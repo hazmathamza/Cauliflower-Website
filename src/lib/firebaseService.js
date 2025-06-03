@@ -553,36 +553,67 @@ export const friendService = {
   // Send a friend request
   sendFriendRequest: async (fromUserId, toUserId) => {
     try {
+      console.log(`Attempting to send friend request from ${fromUserId} to ${toUserId}`);
+      
       // Check if users exist
       const fromUserDoc = await getDoc(doc(db, "users", fromUserId));
       const toUserDoc = await getDoc(doc(db, "users", toUserId));
       
-      if (!fromUserDoc.exists() || !toUserDoc.exists()) {
-        throw new Error("User not found");
+      if (!fromUserDoc.exists()) {
+        console.error("Sender user not found:", fromUserId);
+        throw new Error("Your user profile could not be found");
+      }
+      
+      if (!toUserDoc.exists()) {
+        console.error("Recipient user not found:", toUserId);
+        throw new Error("Recipient user not found");
       }
       
       // Check if already friends
+      const fromUser = fromUserDoc.data();
       const toUser = toUserDoc.data();
       
+      console.log("Sender user data:", fromUser.username);
+      console.log("Recipient user data:", toUser.username);
+      
       if (toUser.friends && toUser.friends.includes(fromUserId)) {
-        throw new Error("Already friends");
+        throw new Error(`You are already friends with ${toUser.username}`);
       }
       
       // Check if request already sent
       if (toUser.friendRequests && toUser.friendRequests.some(req => req.fromUserId === fromUserId)) {
-        throw new Error("Friend request already sent");
+        throw new Error(`Friend request already sent to ${toUser.username}`);
       }
       
-      // Add friend request to recipient's requests
-      await updateDoc(doc(db, "users", toUserId), {
-        friendRequests: arrayUnion({
-          fromUserId,
-          status: "pending",
-          timestamp: new Date().getTime()
-        })
-      });
+      // Initialize friendRequests array if it doesn't exist
+      if (!toUser.friendRequests) {
+        await setDoc(doc(db, "users", toUserId), { friendRequests: [] }, { merge: true });
+      }
       
-      return { success: true };
+      console.log("Adding friend request to recipient's requests");
+      
+      // Add friend request to recipient's requests
+      try {
+        await updateDoc(doc(db, "users", toUserId), {
+          friendRequests: arrayUnion({
+            fromUserId,
+            status: "pending",
+            timestamp: new Date().getTime()
+          })
+        });
+        
+        console.log("Friend request sent successfully");
+        return { success: true };
+      } catch (updateError) {
+        console.error("Error updating document:", updateError);
+        
+        // If the error is related to permissions, provide a more helpful message
+        if (updateError.code === 'permission-denied') {
+          throw new Error("You don't have permission to send friend requests. Please check your account status.");
+        } else {
+          throw new Error(`Failed to send friend request: ${updateError.message}`);
+        }
+      }
     } catch (error) {
       console.error("Error sending friend request:", error);
       throw error;
@@ -592,48 +623,102 @@ export const friendService = {
   // Respond to a friend request
   respondToFriendRequest: async (userId, requesterId, action) => {
     try {
+      console.log(`Responding to friend request from ${requesterId} to ${userId} with action: ${action}`);
+      
       // Get user data
       const userDoc = await getDoc(doc(db, "users", userId));
+      const requesterDoc = await getDoc(doc(db, "users", requesterId));
       
       if (!userDoc.exists()) {
-        throw new Error("User not found");
+        console.error("User not found:", userId);
+        throw new Error("Your user profile could not be found");
+      }
+      
+      if (!requesterDoc.exists()) {
+        console.error("Requester not found:", requesterId);
+        throw new Error("The user who sent the request could not be found");
       }
       
       const user = userDoc.data();
+      const requester = requesterDoc.data();
+      
+      console.log("User data:", user.username);
+      console.log("Requester data:", requester.username);
+      
+      // Initialize friendRequests array if it doesn't exist
+      if (!user.friendRequests) {
+        console.log("Initializing friendRequests array");
+        await setDoc(doc(db, "users", userId), { friendRequests: [] }, { merge: true });
+        throw new Error("No friend requests found. Please refresh the page and try again.");
+      }
       
       // Find the request
       const requestIndex = user.friendRequests.findIndex(req => req.fromUserId === requesterId);
       
       if (requestIndex === -1) {
-        throw new Error("Friend request not found");
+        console.error("Friend request not found");
+        throw new Error("This friend request no longer exists");
       }
       
-      // Remove the request
-      const updatedRequests = [...user.friendRequests];
-      updatedRequests.splice(requestIndex, 1);
+      console.log("Found friend request at index:", requestIndex);
       
-      await updateDoc(doc(db, "users", userId), {
-        friendRequests: updatedRequests
-      });
-      
-      if (action === "accept") {
-        // Add each other as friends
+      try {
+        // Remove the request
+        const updatedRequests = [...user.friendRequests];
+        updatedRequests.splice(requestIndex, 1);
+        
         await updateDoc(doc(db, "users", userId), {
-          friends: arrayUnion(requesterId)
+          friendRequests: updatedRequests
         });
         
-        await updateDoc(doc(db, "users", requesterId), {
-          friends: arrayUnion(userId)
-        });
+        console.log("Removed friend request from user's requests");
         
-        // Create a DM channel ID (not an actual document, just a convention)
-        const sortedUserIds = [userId, requesterId].sort();
-        const dmChannelId = `dm_${sortedUserIds[0]}_${sortedUserIds[1]}`;
+        if (action === "accept") {
+          console.log("Accepting friend request");
+          
+          // Initialize friends arrays if they don't exist
+          if (!user.friends) {
+            await setDoc(doc(db, "users", userId), { friends: [] }, { merge: true });
+          }
+          
+          if (!requester.friends) {
+            await setDoc(doc(db, "users", requesterId), { friends: [] }, { merge: true });
+          }
+          
+          // Add each other as friends
+          await updateDoc(doc(db, "users", userId), {
+            friends: arrayUnion(requesterId)
+          });
+          
+          console.log("Added requester to user's friends");
+          
+          await updateDoc(doc(db, "users", requesterId), {
+            friends: arrayUnion(userId)
+          });
+          
+          console.log("Added user to requester's friends");
+          
+          // Create a DM channel ID (not an actual document, just a convention)
+          const sortedUserIds = [userId, requesterId].sort();
+          const dmChannelId = `dm_${sortedUserIds[0]}_${sortedUserIds[1]}`;
+          
+          console.log("Created DM channel ID:", dmChannelId);
+          
+          return { success: true, action, dmChannelId };
+        }
         
-        return { success: true, action, dmChannelId };
+        console.log("Friend request declined");
+        return { success: true, action };
+      } catch (updateError) {
+        console.error("Error updating document:", updateError);
+        
+        // If the error is related to permissions, provide a more helpful message
+        if (updateError.code === 'permission-denied') {
+          throw new Error("You don't have permission to respond to friend requests. Please check your account status.");
+        } else {
+          throw new Error(`Failed to respond to friend request: ${updateError.message}`);
+        }
       }
-      
-      return { success: true, action };
     } catch (error) {
       console.error("Error responding to friend request:", error);
       throw error;
