@@ -7,7 +7,12 @@ import path from 'path';
 process.env.VERCEL = 'true';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Enable JSX in .js files for Vercel compatibility
+      include: "**/*.{jsx,js}",
+    }),
+  ],
   resolve: {
     extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
     alias: {
@@ -29,8 +34,8 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true
+        drop_console: false,
+        drop_debugger: false
       }
     }
   }

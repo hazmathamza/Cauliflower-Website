@@ -3,6 +3,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "outputDirectory": "dist",
   "framework": "vite",
   "github": {

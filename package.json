@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "vercel-build": "node vercel-build.js",
+    "vercel-prebuild": "node vercel-prebuild.js",
+    "fix-jsx": "node fix-jsx-parsing.js",
+    "vercel-build": "node fix-jsx-parsing.js && node vercel-build.js",
     "preview": "vite preview",
     "vercel-deploy": "vercel",
     "vercel-deploy-prod": "vercel --prod",

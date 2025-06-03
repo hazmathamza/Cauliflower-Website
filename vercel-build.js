@@ -56,6 +56,20 @@ for (const binPath of binPaths) {
 const vercelConfigPath = resolve(__dirname, 'vite.config.vercel.js');
 const configFile = fs.existsSync(vercelConfigPath) ? vercelConfigPath : undefined;
 
+// Create a temporary copy of useTheme.js as useTheme.jsx if it doesn't exist
+const useThemeJsPath = resolve(__dirname, 'src', 'hooks', 'useTheme.js');
+const useThemeJsxPath = resolve(__dirname, 'src', 'hooks', 'useTheme.jsx');
+
+if (fs.existsSync(useThemeJsPath) && !fs.existsSync(useThemeJsxPath)) {
+  try {
+    console.log('Creating JSX version of useTheme.js for Vercel compatibility...');
+    fs.copyFileSync(useThemeJsPath, useThemeJsxPath);
+    console.log('Successfully created useTheme.jsx');
+  } catch (error) {
+    console.warn('Failed to create useTheme.jsx:', error.message);
+  }
+}
+
 async function runBuild() {
   try {
     console.log('Running Vite build using API...');

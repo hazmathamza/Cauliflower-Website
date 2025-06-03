@@ -123,11 +123,10 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  // Use React.createElement instead of JSX to avoid parsing issues
-  return React.createElement(
-    ThemeContext.Provider,
-    { value: { currentTheme, theme, toggleTheme, themes } },
-    children
+  return (
+    <ThemeContext.Provider value={{ currentTheme, theme, toggleTheme, themes }}>
+      {children}
+    </ThemeContext.Provider>
   );
 };
 
