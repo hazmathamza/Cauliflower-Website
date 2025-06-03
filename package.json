@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "vercel-build": "node build-vercel.js",
+    "vercel-build": "node vercel-build-custom.js || node static-build.js",
     "preview": "vite preview"
   },
   "dependencies": {
