@@ -8,10 +8,14 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AddFriendModal from '@/components/ui/AddFriendModal';
+import { useTheme } from '@/hooks/useTheme';
 
 const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, onSendMessage, navigate }) => {
   const [addFriendUsername, setAddFriendUsername] = useState('');
   const [activeTab, setActiveTab] = useState("online");
+  const [isAddFriendModalOpen, setIsAddFriendModalOpen] = useState(false);
+  const { theme } = useTheme();
 
   if (!currentUser) {
     navigate('/auth');
@@ -61,7 +65,7 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between p-3 bg-gray-700/30 hover:bg-gray-700/50 rounded-lg transition-colors"
+      className={`flex items-center justify-between p-3 ${theme.input} hover:${theme.hover} rounded-lg transition-colors`}
     >
       <div className="flex items-center space-x-3">
         <div className="relative">
@@ -120,28 +124,30 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
 
 
   return (
-    <div className="flex flex-col h-full bg-gray-700">
-      <div className="p-4 border-b border-gray-600">
-        <form onSubmit={handleAddFriendSubmit} className="flex items-center space-x-2 bg-gray-800 p-2 rounded-lg shadow">
-          <Input
-            type="text"
-            placeholder="Add Friend with their Username"
-            value={addFriendUsername}
-            onChange={(e) => setAddFriendUsername(e.target.value)}
-            className="bg-transparent border-0 text-white placeholder-gray-500 focus:ring-0 flex-1"
-          />
-          <Button type="submit" className="bg-primary hover:bg-primary/90 text-white font-semibold">
-            <UserPlus className="mr-2 h-4 w-4" /> Send Request
-          </Button>
-        </form>
+    <div className={`flex flex-col h-full ${theme.chatArea}`}>
+      <div className={`p-4 border-b ${theme.border}`}>
+        <Button 
+          onClick={() => setIsAddFriendModalOpen(true)} 
+          className="bg-primary hover:bg-primary/90 text-white font-semibold w-full py-6"
+        >
+          <UserPlus className="mr-2 h-5 w-5" /> Add Friend
+        </Button>
       </div>
+      
+      <AddFriendModal 
+        isOpen={isAddFriendModalOpen}
+        onClose={() => setIsAddFriendModalOpen(false)}
+        onAddFriend={sendFriendRequest}
+        users={users}
+        currentUser={currentUser}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="shrink-0 bg-gray-700 p-1 m-3 rounded-lg">
-          <TabsTrigger value="online" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300 hover:text-white flex-1">Online ({onlineFriends.length})</TabsTrigger>
-          <TabsTrigger value="all" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300 hover:text-white flex-1">All ({allFriends.length})</TabsTrigger>
-          <TabsTrigger value="pending" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300 hover:text-white flex-1">Pending ({pendingRequests.length})</TabsTrigger>
-          <TabsTrigger value="blocked" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white text-gray-300 hover:text-white flex-1" onClick={() => toast({title: "Blocked Users", description: "Feature coming soon!"})}>Blocked</TabsTrigger>
+        <TabsList className={`shrink-0 ${theme.input} p-1 m-3 rounded-lg`}>
+          <TabsTrigger value="online" className={`data-[state=active]:${theme.active} data-[state=active]:${theme.text} ${theme.secondaryText} hover:${theme.text} flex-1`}>Online ({onlineFriends.length})</TabsTrigger>
+          <TabsTrigger value="all" className={`data-[state=active]:${theme.active} data-[state=active]:${theme.text} ${theme.secondaryText} hover:${theme.text} flex-1`}>All ({allFriends.length})</TabsTrigger>
+          <TabsTrigger value="pending" className={`data-[state=active]:${theme.active} data-[state=active]:${theme.text} ${theme.secondaryText} hover:${theme.text} flex-1`}>Pending ({pendingRequests.length})</TabsTrigger>
+          <TabsTrigger value="blocked" className={`data-[state=active]:${theme.active} data-[state=active]:${theme.text} ${theme.secondaryText} hover:${theme.text} flex-1`} onClick={() => toast({title: "Blocked Users", description: "Feature coming soon!"})}>Blocked</TabsTrigger>
         </TabsList>
         
         <ScrollArea className="flex-1 p-3 space-y-2">
