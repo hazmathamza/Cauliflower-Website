@@ -12,7 +12,7 @@ const firebaseConfig = {
   authDomain: "cauliflower-v2.firebaseapp.com",
   projectId: "cauliflower-v2",
   storageBucket: "cauliflower-v2.appspot.com",
-  messagingSenderId: "495337370550,
+  messagingSenderId: "495337370550",
   appId: "1:495337370550:web:f0a117a103d9ee698b4717",
   databaseURL: "https://cauliflower-v2-default-rtdb.firebaseio.com/"
 };
