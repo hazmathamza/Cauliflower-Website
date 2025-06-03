@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "vercel-build": "vite build",
-    "preview": "vite preview"
+    "vercel-build": "node vercel-build.js",
+    "preview": "vite preview",
+    "vercel-deploy": "vercel",
+    "vercel-deploy-prod": "vercel --prod",
+    "check-vercel": "node check-vercel.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.5",
