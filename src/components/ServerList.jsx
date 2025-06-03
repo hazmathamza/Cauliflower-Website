@@ -4,10 +4,15 @@ import { Plus, Home, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ThemeSelector from '@/components/ui/ThemeSelector';
+import { useTheme } from '@/hooks/useTheme';
 
 const ServerList = ({ servers, activeServer, onServerSelect, onCreateServer, navigate }) => {
+  const { theme } = useTheme();
+  
   return (
-    <div className="w-16 bg-gray-900 flex flex-col items-center py-3 space-y-3 h-full border-r border-gray-800">
+    <div className={`w-16 ${theme.sidebar} flex flex-col items-center py-3 space-y-3 h-full border-r ${theme.border}`}>
+      <ThemeSelector />
       <motion.div
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -17,7 +22,7 @@ const ServerList = ({ servers, activeServer, onServerSelect, onCreateServer, nav
         }}
         className={cn(
           "h-12 w-12 rounded-full flex items-center justify-center cursor-pointer server-icon",
-          activeServer === 'home' ? 'bg-primary rounded-2xl' : 'bg-gray-700 hover:bg-primary'
+          activeServer === 'home' ? 'bg-primary rounded-2xl' : `${theme.input} hover:bg-primary`
         )}
         title="Home / Friends"
       >

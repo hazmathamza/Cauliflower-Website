@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read all documents
+    match /{document=**} {
+      allow read: if request.auth != null;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow users to read and write their own documents
+      allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow creation of user documents during registration
+      allow create: if request.auth != null;
+    }
+    
+    // Servers collection rules
+    match /servers/{serverId} {
+      // Allow server creation by authenticated users
+      allow create: if request.auth != null;
+      
+      // Allow server updates by the server owner or members
+      allow update: if request.auth != null && 
+                     (resource.data.ownerId == request.auth.uid || 
+                      resource.data.members.hasAny([request.auth.uid]));
+      
+      // Allow all authenticated users to read servers
+      allow read: if request.auth != null;
+    }
+    
+    // Messages collection rules
+    match /messages/{messageId} {
+      // Allow authenticated users to create messages
+      allow create: if request.auth != null;
+      
+      // Allow message authors to update or delete their own messages
+      allow update, delete: if request.auth != null && 
+                             resource.data.userId == request.auth.uid;
+      
+      // Allow all authenticated users to read messages
+      allow read: if request.auth != null;
+    }
+  }
+}

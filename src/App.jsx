@@ -30,7 +30,7 @@ function App() {
   const [users, setUsers] = useState([]);
   const [members, setMembers] = useState([]);
   
-  const [activeServerId, useActiveServerId] = useLocalStorage('discord-activeServerId', 'home');
+  const [activeServerId, setActiveServerId] = useLocalStorage('discord-activeServerId', 'home');
   const [activeChannelId, setActiveChannelId] = useLocalStorage('discord-activeChannelId', null);
   
   const [onlineUsers, setOnlineUsers] = useState([]);

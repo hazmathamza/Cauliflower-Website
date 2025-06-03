@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import EmojiPicker from 'emoji-picker-react';
 
 const ChatArea = ({ 
   channel, 
@@ -17,9 +18,11 @@ const ChatArea = ({
 }) => {
   const [newMessage, setNewMessage] = useState('');
   const [attachedFile, setAttachedFile] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const emojiButtonRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,10 +36,47 @@ const ChatArea = ({
     // Clear message input when channel changes
     setNewMessage('');
     setAttachedFile(null);
+    setShowEmojiPicker(false);
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   }, [channel]);
+  
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEmojiPicker && emojiButtonRef.current && !emojiButtonRef.current.contains(event.target)) {
+        // Check if the click is on the emoji picker itself
+        const emojiPickerElement = document.querySelector('.EmojiPickerReact');
+        if (emojiPickerElement && !emojiPickerElement.contains(event.target)) {
+          setShowEmojiPicker(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+  
+  const handleEmojiClick = (emojiData) => {
+    const emoji = emojiData.emoji;
+    const cursorPosition = inputRef.current.selectionStart;
+    const textBeforeCursor = newMessage.slice(0, cursorPosition);
+    const textAfterCursor = newMessage.slice(cursorPosition);
+    
+    setNewMessage(textBeforeCursor + emoji + textAfterCursor);
+    
+    // Focus back on input after selecting emoji
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = cursorPosition + emoji.length;
+        inputRef.current.selectionEnd = cursorPosition + emoji.length;
+      }
+    }, 10);
+  };
 
   const handleSendMessage = () => {
     if (newMessage.trim() || attachedFile) {
@@ -226,9 +266,29 @@ const ChatArea = ({
             onKeyPress={handleKeyPress}
             className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-gray-400 text-sm"
           />
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white" onClick={() => toast({title: "Emoji Picker Coming Soon!", description: "You'll be able to add emojis soon."})}>
-            <Smile className="h-5 w-5" />
-          </Button>
+          <div className="relative">
+            <Button 
+              ref={emojiButtonRef}
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-gray-400 hover:text-white" 
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            >
+              <Smile className="h-5 w-5" />
+            </Button>
+            
+            {showEmojiPicker && (
+              <div className="absolute bottom-12 right-0 z-50">
+                <EmojiPicker 
+                  onEmojiClick={handleEmojiClick} 
+                  theme="dark"
+                  searchPlaceHolder="Search emoji..."
+                  width={320}
+                  height={400}
+                />
+              </div>
+            )}
+          </div>
           <Button onClick={handleSendMessage} disabled={!newMessage.trim() && !attachedFile} size="icon" className="h-8 w-8 bg-primary hover:bg-primary/90">
             <Send className="h-4 w-4" />
           </Button>
