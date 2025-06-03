@@ -1,13 +1,26 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { createLogger, defineConfig } from 'vite';
+import fs from 'node:fs';
 
+// Check if we're in a Vercel environment
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+
+// Set NODE_ENV based on the environment
 const isDev = process.env.NODE_ENV !== 'production';
 let inlineEditPlugin, editModeDevPlugin;
 
-if (isDev) {
-	inlineEditPlugin = (await import('./plugins/visual-editor/vite-plugin-react-inline-editor.js')).default;
-	editModeDevPlugin = (await import('./plugins/visual-editor/vite-plugin-edit-mode.js')).default;
+// Only import development plugins in development mode
+// and when not in a Vercel build environment
+if (isDev && !process.env.VERCEL) {
+  try {
+    inlineEditPlugin = (await import('./plugins/visual-editor/vite-plugin-react-inline-editor.js')).default;
+    editModeDevPlugin = (await import('./plugins/visual-editor/vite-plugin-edit-mode.js')).default;
+  } catch (error) {
+    console.warn('Development plugins could not be loaded:', error);
+    inlineEditPlugin = () => ({});
+    editModeDevPlugin = () => ({});
+  }
 }
 
 const configHorizonsViteErrorHandler = `
@@ -192,9 +205,9 @@ logger.error = (msg, options) => {
 export default defineConfig({
 	customLogger: logger,
 	plugins: [
-		...(isDev ? [inlineEditPlugin(), editModeDevPlugin()] : []),
+		...(isDev && !process.env.VERCEL && inlineEditPlugin && editModeDevPlugin ? [inlineEditPlugin(), editModeDevPlugin()] : []),
 		react(),
-		addTransformIndexHtml
+		...(isDev && !process.env.VERCEL ? [addTransformIndexHtml] : [])
 	],
 	server: {
 		cors: true,
@@ -217,6 +230,17 @@ export default defineConfig({
 				'@babel/generator',
 				'@babel/types'
 			]
+		},
+		// Ensure proper permissions for Vercel
+		chunkSizeWarningLimit: 1600,
+		outDir: 'dist',
+		emptyOutDir: true,
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+				drop_debugger: true
+			}
 		}
 	}
 });
