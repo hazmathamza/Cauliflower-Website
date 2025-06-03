@@ -22,16 +22,17 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
     return null;
   }
 
-  const friendsList = currentUser.friends?.map(friendId => users.find(u => u.id === friendId)).filter(Boolean) || [];
+  // Use uid instead of id for user identification
+  const friendsList = currentUser.friends?.map(friendId => users.find(u => u.uid === friendId)).filter(Boolean) || [];
   const onlineFriends = friendsList.filter(f => f.status === 'Online' || f.status === 'Always Online');
   const allFriends = friendsList; 
   const pendingRequests = currentUser.friendRequests?.filter(req => req.status === 'pending')
-    .map(req => ({ ...req, user: users.find(u => u.id === req.fromUserId) }))
+    .map(req => ({ ...req, user: users.find(u => u.uid === req.fromUserId) }))
     .filter(req => req.user) || [];
   
   // Placeholder for users you've sent requests to that are still pending
   // This would require checking other users' friendRequests lists or a separate 'sentRequests' list for currentUser
-  const sentRequests = users.filter(u => u.friendRequests?.some(req => req.fromUserId === currentUser.id && req.status === 'pending'));
+  const sentRequests = users.filter(u => u.friendRequests?.some(req => req.fromUserId === currentUser.uid && req.status === 'pending'));
 
 
   const handleAddFriendSubmit = (e) => {
@@ -40,21 +41,43 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
       toast({ variant: "destructive", title: "Error", description: "Please enter a username." });
       return;
     }
-    const targetUser = users.find(u => u.username.toLowerCase() === addFriendUsername.toLowerCase().trim());
+    
+    // Use case-insensitive comparison for username
+    const targetUser = users.find(u => 
+      u.username && u.username.toLowerCase() === addFriendUsername.toLowerCase().trim()
+    );
+    
     if (!targetUser) {
       toast({ variant: "destructive", title: "User Not Found", description: `Could not find user: ${addFriendUsername}` });
       return;
     }
-    if (targetUser.id === currentUser.id) {
+    
+    // Use uid instead of id
+    if (targetUser.uid === currentUser.uid) {
       toast({ variant: "destructive", title: "Error", description: "You can't add yourself as a friend." });
       return;
     }
-    sendFriendRequest(targetUser.id);
+    
+    // Check if already friends
+    if (currentUser.friends && currentUser.friends.includes(targetUser.uid)) {
+      toast({ variant: "destructive", title: "Already Friends", description: `You are already friends with ${targetUser.username}.` });
+      return;
+    }
+    
+    // Check if friend request already sent
+    if (targetUser.friendRequests && targetUser.friendRequests.some(req => req.fromUserId === currentUser.uid)) {
+      toast({ variant: "destructive", title: "Request Already Sent", description: `You've already sent a friend request to ${targetUser.username}.` });
+      return;
+    }
+    
+    // Send friend request using uid
+    sendFriendRequest(targetUser.uid);
     setAddFriendUsername('');
   };
 
   const startDM = (friendId) => {
-    const friend = users.find(u => u.id === friendId);
+    // Use uid instead of id
+    const friend = users.find(u => u.uid === friendId);
     if (friend) {
       onSendMessage(`Started a chat with ${friend.username}`, null, friendId);
       navigate('/'); // Navigate to main chat view, App.jsx handles setting DM channel
@@ -89,16 +112,16 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
       <div className="flex space-x-2">
         {type === 'pending' && (
           <>
-            <Button size="icon" variant="ghost" className="text-green-400 hover:bg-green-500/20 hover:text-green-300 h-8 w-8" onClick={() => onFriendRequest(user.id, 'accept')}>
+            <Button size="icon" variant="ghost" className="text-green-400 hover:bg-green-500/20 hover:text-green-300 h-8 w-8" onClick={() => onFriendRequest(user.uid, 'accept')}>
               <CheckCircle className="h-5 w-5" />
             </Button>
-            <Button size="icon" variant="ghost" className="text-red-400 hover:bg-red-500/20 hover:text-red-300 h-8 w-8" onClick={() => onFriendRequest(user.id, 'decline')}>
+            <Button size="icon" variant="ghost" className="text-red-400 hover:bg-red-500/20 hover:text-red-300 h-8 w-8" onClick={() => onFriendRequest(user.uid, 'decline')}>
               <XCircle className="h-5 w-5" />
             </Button>
           </>
         )}
         {(type === 'online' || type === 'all') && (
-          <Button size="icon" variant="ghost" className="text-gray-400 hover:bg-primary/20 hover:text-primary h-8 w-8" onClick={() => startDM(user.id)}>
+          <Button size="icon" variant="ghost" className="text-gray-400 hover:bg-primary/20 hover:text-primary h-8 w-8" onClick={() => startDM(user.uid)}>
             <MessageSquare className="h-5 w-5" />
           </Button>
         )}
@@ -112,14 +135,15 @@ const FriendsPage = ({ currentUser, users, onFriendRequest, sendFriendRequest, o
   );
   
   const renderFriendList = (list, type) => {
-    if (list.length === 0) {
+    if (!list || list.length === 0) {
       let message = "No friends here yet. Add some!";
       if (type === 'online') message = "No friends are currently online.";
       if (type === 'pending') message = "No pending friend requests.";
       if (type === 'sent') message = "You haven't sent any friend requests recently.";
       return <p className="text-gray-500 text-center py-8">{message}</p>;
     }
-    return list.map(friend => <FriendCard key={friend.id} user={friend} type={type} />);
+    // Use uid as key instead of id
+    return list.map(friend => <FriendCard key={friend.uid} user={friend} type={type} />);
   };
 
 

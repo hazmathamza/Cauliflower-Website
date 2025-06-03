@@ -46,18 +46,36 @@ const AddFriendModal = ({ isOpen, onClose, onAddFriend, users, currentUser }) =>
       return;
     }
     
-    const targetUser = users.find(u => u.username.toLowerCase() === username.toLowerCase().trim());
+    // Use case-insensitive comparison and ensure username exists
+    const targetUser = users.find(u => 
+      u.username && u.username.toLowerCase() === username.toLowerCase().trim()
+    );
+    
     if (!targetUser) {
       toast({ variant: "destructive", title: "User Not Found", description: `Could not find user: ${username}` });
       return;
     }
     
-    if (targetUser.id === currentUser.id) {
+    // Use uid instead of id
+    if (targetUser.uid === currentUser.uid) {
       toast({ variant: "destructive", title: "Error", description: "You can't add yourself as a friend." });
       return;
     }
     
-    onAddFriend(targetUser.id);
+    // Check if already friends
+    if (currentUser.friends && currentUser.friends.includes(targetUser.uid)) {
+      toast({ variant: "destructive", title: "Already Friends", description: `You are already friends with ${targetUser.username}.` });
+      return;
+    }
+    
+    // Check if friend request already sent
+    if (targetUser.friendRequests && targetUser.friendRequests.some(req => req.fromUserId === currentUser.uid)) {
+      toast({ variant: "destructive", title: "Request Already Sent", description: `You've already sent a friend request to ${targetUser.username}.` });
+      return;
+    }
+    
+    // Send friend request using uid
+    onAddFriend(targetUser.uid);
     setUsername('');
     onClose();
   };
