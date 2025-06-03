@@ -1,14 +1,4 @@
 {
-  "version": 2,
-  "public": true,
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "github": {
-    "silent": true
-  },
-  "installCommand": "npm install && node prepare-vercel.js",
-  "buildCommand": "node build.mjs",
-  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
