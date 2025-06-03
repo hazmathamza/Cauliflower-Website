@@ -1,5 +1,8 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "dist"
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
