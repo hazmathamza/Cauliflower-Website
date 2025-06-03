@@ -1,13 +1,13 @@
-// Simple Vite configuration for Vercel
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import path from 'path';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
+// Simple Vite configuration that works with Vercel
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(process.cwd(), 'src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   build: {

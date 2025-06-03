@@ -1,16 +1,5 @@
 {
-  "version": 2,
   "framework": "vite",
-  "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "env": {
-    "VERCEL": "true",
-    "NODE_ENV": "production"
-  }
+  "buildCommand": "vite build",
+  "outputDirectory": "dist"
 }
