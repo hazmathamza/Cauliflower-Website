@@ -8,13 +8,13 @@ import { getDatabase } from "firebase/database";
 // Your web app's Firebase configuration
 // Replace these values with your own Firebase project configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com"
+  apiKey: "AIzaSyDaOuCQ5bmQGvQZZHcP2GY9H9sXZWdWGAI",
+  authDomain: "cauliflower-v2.firebaseapp.com",
+  projectId: "cauliflower-v2",
+  storageBucket: "cauliflower-v2.appspot.com",
+  messagingSenderId: "495337370550,
+  appId: "1:495337370550:web:f0a117a103d9ee698b4717",
+  databaseURL: "https://cauliflower-v2-default-rtdb.firebaseio.com/"
 };
 
 // Initialize Firebase
